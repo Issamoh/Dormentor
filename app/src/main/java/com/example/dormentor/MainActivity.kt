@@ -87,7 +87,7 @@ class MainActivity : AppCompatActivity() {
                     val imageAnalysisUseCase = ImageAnalysis.Builder()
                         .build()
                         .also {
-                            it.setAnalyzer(cameraExecutor,FaceDetector())
+                            it.setAnalyzer(cameraExecutor, FaceDetector())
                         }
 
                     try {
