@@ -7,25 +7,38 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.dormentor.databinding.ActivityMainBinding
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityMainBinding
+    private lateinit var cameraExecutor:ExecutorService
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
 
-        //check if we already have the permissions needed otherwise request them
+        //check if we already have the permissions needed, otherwise request them
         if(allPermissionsGranted()) {
             startCamera()
         } else {
             ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
         }
+
+        //Excutor thread used for ImagesAnalyzer (should be killed onDestroy)
+         cameraExecutor = Executors.newSingleThreadExecutor()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        cameraExecutor.shutdown()
     }
 
 
@@ -60,6 +73,9 @@ class MainActivity : AppCompatActivity() {
                 {
                     val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
+                    // Selecting the front camera as a default
+                    val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+
                     //Preview use case
                     val previewUseCase = Preview.Builder()
                         .build()
@@ -67,15 +83,20 @@ class MainActivity : AppCompatActivity() {
                             it.setSurfaceProvider(viewBinding.previewView.surfaceProvider)
                         }
 
-                    // Selecting the front camera as a default
-                    val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+                    //Images Analysis use case
+                    val imageAnalysisUseCase = ImageAnalysis.Builder()
+                        .build()
+                        .also {
+                            it.setAnalyzer(cameraExecutor,FaceDetector())
+                        }
 
                     try {
                         //Unbind all the useCases before binding
                         cameraProvider.bindToLifecycle(
                             this,
                             cameraSelector,
-                            previewUseCase
+                            previewUseCase,
+                            imageAnalysisUseCase
                         )
                     } catch (e: Exception) {
                         Log.e(TAG,"Preview use case binding failed",e)
