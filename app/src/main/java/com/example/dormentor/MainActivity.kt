@@ -32,10 +32,14 @@ class MainActivity : AppCompatActivity() {
         //ViewModel to display the image when ready
         val bitmapViewModel : BitmapViewModel = ViewModelProvider(this).get(BitmapViewModel::class.java)
 
-        val bitmapObserver = Observer<Bitmap> {
-           viewBinding.imageView.setImageBitmap(it)
+        val eyeBitmapObserver = Observer<Bitmap> {
+           viewBinding.eyeImageView.setImageBitmap(it)
         }
-        bitmapViewModel.getBitmap().observe(this,bitmapObserver)
+        bitmapViewModel.getEyeBitmap().observe(this,eyeBitmapObserver)
+        val mouthBitmapObserver = Observer<Bitmap> {
+            viewBinding.mouthImageView.setImageBitmap(it)
+        }
+        bitmapViewModel.getMouthBitmap().observe(this,mouthBitmapObserver)
 
         //check if we already have the permissions needed, otherwise request them
         if(allPermissionsGranted()) {

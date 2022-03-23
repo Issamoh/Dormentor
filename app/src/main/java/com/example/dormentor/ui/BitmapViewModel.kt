@@ -6,12 +6,20 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
 class BitmapViewModel:ViewModel() {
-    private var bitmapLiveData : MutableLiveData<Bitmap> = MutableLiveData<Bitmap>()
+    private var eyeBitmapLiveData : MutableLiveData<Bitmap> = MutableLiveData<Bitmap>()
+    private var mouthBitmapLiveData : MutableLiveData<Bitmap> = MutableLiveData<Bitmap>()
 
-    public fun getBitmap(): LiveData<Bitmap> {
-        return bitmapLiveData
+    public fun getEyeBitmap(): LiveData<Bitmap> {
+        return eyeBitmapLiveData
     }
-    public fun changeBitmap(bitmap: Bitmap) {
-        bitmapLiveData.value = bitmap
+    public fun getMouthBitmap(): LiveData<Bitmap> {
+        return mouthBitmapLiveData
+    }
+    public fun changeEyeBitmap(bitmap: Bitmap) {
+        eyeBitmapLiveData.value = bitmap
+    }
+
+    fun changeMouthBitmap(bitmap: Bitmap) {
+        mouthBitmapLiveData.value = bitmap
     }
 }

@@ -42,7 +42,9 @@ class FaceDetector(private val lifecycleOwner: ViewModelStoreOwner) : ImageAnaly
                        bitmap?.let {
                             if(!bitmapAlreadyCreated) {
                                 val eyeBitmap = extractEyeRegion(face,it)
-                                eyeBitmap?.let { it1 -> bitmapViewModel.changeBitmap(it1) }
+                                val mouthBitmap = extractMouthRegion(face,it)
+                                eyeBitmap?.let { it1 -> bitmapViewModel.changeEyeBitmap(it1) }
+                                mouthBitmap?.let { it2 -> bitmapViewModel.changeMouthBitmap(it2)}
                                 bitmapAlreadyCreated = true
                                 Log.d(TAG,"eye bitmap created")
                             }
@@ -68,19 +70,16 @@ class FaceDetector(private val lifecycleOwner: ViewModelStoreOwner) : ImageAnaly
             //Finding the starting point (nearestX,highestY) :
 
             //1. finding the highest point in the eye brow:
-            val indexHighestY = rightEyeBrowContours.withIndex().minByOrNull { it.value.y }?.index
-            val highestY = abs(rightEyeBrowContours[indexHighestY!!].y)
+            val highestY = rightEyeBrowContours.minByOrNull { it.y }!!.y
 
             //2. finding the nearest point to face's edge
             val nearestX = abs(min(rightEyeBrowContours[0].x, rightEyeContours[0].x))
 
             //Finding the width of the eye :
             // 1. finding the furthest point of the eye
-            val indexfurthestXeyeBrow = rightEyeBrowContours.withIndex().maxByOrNull { it.value.x }?.index
-            val furthestXeyeBrow = abs(rightEyeBrowContours[indexfurthestXeyeBrow!!].x)
+            val furthestXeyeBrow = rightEyeBrowContours.maxByOrNull { it.x }!!.x
 
-            val indexfurthestXeye = rightEyeContours.withIndex().maxByOrNull { it.value.x }?.index
-            val furthestXeye= abs(rightEyeContours[indexfurthestXeye!!].x)
+            val furthestXeye = rightEyeContours.maxByOrNull { it.x }!!.x
 
             val furthestX = abs(max(furthestXeyeBrow, furthestXeye))
 
@@ -89,10 +88,52 @@ class FaceDetector(private val lifecycleOwner: ViewModelStoreOwner) : ImageAnaly
 
             //Finding the height of the eye :
             //1. finding the lowest point of the eye :
-            val indexLowestY = rightEyeContours.withIndex().maxByOrNull { it.value.y }?.index
-            val lowestY = abs(rightEyeContours[indexLowestY!!].y)
+            val lowestY = rightEyeContours.maxByOrNull { it.y }!!.y
+
             //2. Calculating the height
             val height = abs((lowestY - highestY).toInt())
+
+            return Bitmap.createBitmap(
+                srcBitmap,
+                nearestX.toInt(),
+                highestY.toInt(),
+                width,
+                height
+            )
+
+        } else {
+            return null
+        }
+    }
+
+    private fun extractMouthRegion(face: Face, srcBitmap: Bitmap) : Bitmap? {
+        val upLipTop = face.getContour(FaceContour.UPPER_LIP_TOP)?.points
+        val lowLipBottom = face.getContour(FaceContour.LOWER_LIP_BOTTOM)?.points
+
+
+        if(upLipTop != null && lowLipBottom != null) {
+            //Finding the starting point (nearestX,highestY) :
+                // 1. Finding the nearest point of the mouth to face's edge
+            val nearestXUp = upLipTop.minByOrNull { it.x }!!.x
+            val nearestXLow = lowLipBottom.minByOrNull { it.x }!!.x
+            val nearestX = min(nearestXUp,nearestXLow)
+
+                //2. Finding the highest point of the mouth
+            val highestY = upLipTop.minByOrNull { it.y }!!.y
+
+            //Finding the width of the mouth :
+                // 1. Finding the furthest point of the mouth :
+            val furthestXUp = upLipTop.maxByOrNull { it.x }!!.x
+            val furthestXLow = lowLipBottom.maxByOrNull { it.x }!!.x
+            val furthestX = max(furthestXLow,furthestXUp)
+                // 2. Calculating the width :
+            val width = abs(furthestX - nearestX).toInt()
+
+            //Finding the height of the mouth :
+                //1. Finding the lowest point of the mouth :
+            val lowestY = lowLipBottom.maxByOrNull { it.y }!!.y
+                //2. Calculating the height :
+            val height = abs(lowestY - highestY).toInt()
 
             return Bitmap.createBitmap(
                 srcBitmap,
