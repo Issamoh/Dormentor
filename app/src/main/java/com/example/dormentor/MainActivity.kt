@@ -2,6 +2,7 @@ package com.example.dormentor
 
 import android.Manifest
 import android.content.pm.PackageManager.PERMISSION_GRANTED
+import android.graphics.Bitmap
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -12,7 +13,10 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import com.example.dormentor.databinding.ActivityMainBinding
+import com.example.dormentor.ui.BitmapViewModel
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -25,6 +29,14 @@ class MainActivity : AppCompatActivity() {
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
 
+        //ViewModel to display the image when ready
+        val bitmapViewModel : BitmapViewModel = ViewModelProvider(this).get(BitmapViewModel::class.java)
+
+        val bitmapObserver = Observer<Bitmap> {
+           viewBinding.imageView.setImageBitmap(it)
+        }
+        bitmapViewModel.getBitmap().observe(this,bitmapObserver)
+
         //check if we already have the permissions needed, otherwise request them
         if(allPermissionsGranted()) {
             startCamera()
@@ -32,7 +44,7 @@ class MainActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
         }
 
-        //Excutor thread used for ImagesAnalyzer (should be killed onDestroy)
+        //Executor thread used for ImagesAnalyzer (should be killed onDestroy)
          cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
@@ -87,7 +99,7 @@ class MainActivity : AppCompatActivity() {
                     val imageAnalysisUseCase = ImageAnalysis.Builder()
                         .build()
                         .also {
-                            it.setAnalyzer(cameraExecutor, FaceDetector())
+                            it.setAnalyzer(cameraExecutor, FaceDetector(this))
                         }
 
                     try {
