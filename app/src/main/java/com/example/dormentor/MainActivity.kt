@@ -83,7 +83,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startCamera() {
-        //ProcessCameraProvider is a singleton used to bind Cameras lifeCycle to any lifeCycleOwner
+        //ProcessCameraProvider is a singleton used to bind Cameras lifeCycle to any lifeCycleOwner (this activity for this case)
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
             cameraProviderFuture.addListener(
                 {
