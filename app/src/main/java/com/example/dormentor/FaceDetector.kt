@@ -1,6 +1,7 @@
 package com.example.dormentor
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Rect
 import android.util.Log
@@ -8,22 +9,28 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.core.graphics.minus
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
+import com.example.dormentor.ml.AlexNetV2
 import com.example.dormentor.ui.BitmapViewModel
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.Face
 import com.google.mlkit.vision.face.FaceContour
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
+import org.tensorflow.lite.DataType
+import org.tensorflow.lite.support.image.TensorImage
 import util.BitmapUtils
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-class FaceDetector(private val lifecycleOwner: ViewModelStoreOwner) : ImageAnalysis.Analyzer {
+class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.Analyzer {
 
-    val bitmapViewModel : BitmapViewModel = ViewModelProvider(lifecycleOwner).get(BitmapViewModel::class.java)
+    val bitmapViewModel : BitmapViewModel = ViewModelProvider(lifecycleOwner as ViewModelStoreOwner).get(BitmapViewModel::class.java)
+    private val alexNetV2 = AlexNetV2.newInstance(lifecycleOwner as Context)
+//    private val alexNetV1 = AlexNetV1.newInstance(lifecycleOwner as Context)
 
     @SuppressLint("UnsafeOptInUsageError")
     override fun analyze(image: ImageProxy) {
@@ -31,24 +38,49 @@ class FaceDetector(private val lifecycleOwner: ViewModelStoreOwner) : ImageAnaly
         val bitmap : Bitmap? = BitmapUtils.getBitmap(image)
 
         //Creating InputImage object used as input for the faceDetector
+
         val img = image.image
         val inputImage = img?.let { InputImage.fromMediaImage(it,image.imageInfo.rotationDegrees) }
-
         if (inputImage != null) {
             detector.process(inputImage)
                 .addOnSuccessListener { faces ->
                     for (face in faces) {
+                        bitmap?.let {
+                            var isCreated = bitmapViewModel.getIsBitmapCreated().value
+                            if(!isCreated!!) {
+                                val eyeBitmap = extractEyeRegion(face, it)
+                                val eyeBitmapBig =
+                                    BitmapUtils.getResizedBitmap(eyeBitmap, 256, 256)
+                                val mouthBitmap = extractMouthRegion(face, it)
+                                val mouthBitmapBig =
+                                    BitmapUtils.getResizedBitmap(mouthBitmap, 256, 256)
+                                eyeBitmapBig?.let { it1 -> bitmapViewModel.changeEyeBitmap(it1) }
+                                mouthBitmapBig?.let { it2 -> bitmapViewModel.changeMouthBitmap(it2) }
+                                val tfEyeImageA = TensorImage.fromBitmap(eyeBitmapBig)
+                                val tfEyeImage = TensorImage.createFrom(tfEyeImageA, DataType.FLOAT32)
+                                var outputs =
+                                    alexNetV2.process(tfEyeImageA).probabilityAsCategoryList
+                                             .apply {
+                                                     sortByDescending { it.score } // Sort with highest confidence first
+                                                 }
 
-                       bitmap?.let {
-                            if(!bitmapAlreadyCreated) {
-                                val eyeBitmap = extractEyeRegion(face,it)
-                                val mouthBitmap = extractMouthRegion(face,it)
-                                eyeBitmap?.let { it1 -> bitmapViewModel.changeEyeBitmap(it1) }
-                                mouthBitmap?.let { it2 -> bitmapViewModel.changeMouthBitmap(it2)}
-                                bitmapAlreadyCreated = true
-                                Log.d(TAG,"eye bitmap created")
+                                outputs.forEach {
+                                    Log.d(TAG, it.label + " " + it.score)
+                                }
+                                Log.d(TAG, "Eye status : " + outputs[0].label + " * " + outputs[0].score)
+                                bitmapViewModel.changeEyeStatusLabelScore(outputs[0].label, outputs[0].score)
+                                val tfMouthImageA = TensorImage.fromBitmap(mouthBitmapBig)
+                                val tfMouthImage = TensorImage.createFrom(tfMouthImageA, DataType.FLOAT32)
+    //                          val wholePictureResizd = BitmapUtils.getResizedBitmap(bitmap,256,256)
+    //                          val tfWholePicture = TensorImage.fromBitmap(wholePictureResizd)
+                                outputs = alexNetV2.process(tfMouthImage).probabilityAsCategoryList
+                                    .apply {
+                                        sortByDescending { it.score } // Sort with highest confidence first
+                                    }
+                                Log.d(TAG, "Mouth status : " + outputs[0].label + " * " + outputs[0].score)
+                                bitmapViewModel.changeIsBitmapCreated()
+                                 }
                             }
-                        }
                     }
                 }
                 .addOnFailureListener { e ->
@@ -58,6 +90,7 @@ class FaceDetector(private val lifecycleOwner: ViewModelStoreOwner) : ImageAnaly
                     image.close()
                 }
         }
+
     }
 
 

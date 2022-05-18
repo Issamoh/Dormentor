@@ -37,9 +37,24 @@ class MainActivity : AppCompatActivity() {
         }
         bitmapViewModel.getEyeBitmap().observe(this,eyeBitmapObserver)
         val mouthBitmapObserver = Observer<Bitmap> {
+            Log.d(TAG,"image changed")
             viewBinding.mouthImageView.setImageBitmap(it)
         }
         bitmapViewModel.getMouthBitmap().observe(this,mouthBitmapObserver)
+
+        val EyeStatLabelObserver = Observer<String> {
+            viewBinding.LabelEye.setText(it)
+        }
+        bitmapViewModel.getEyeStatusLabel().observe(this,EyeStatLabelObserver)
+
+        val EyeStatScoreObserver = Observer<Float> {
+            viewBinding.ScoreEye.setText(it.toString())
+        }
+        bitmapViewModel.getEyeStatusScore().observe(this,EyeStatScoreObserver)
+
+        viewBinding.retryButton.setOnClickListener {
+            bitmapViewModel.changeIsBitmapCreated()
+        }
 
         //check if we already have the permissions needed, otherwise request them
         if(allPermissionsGranted()) {
