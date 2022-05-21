@@ -3,13 +3,10 @@ package com.example.dormentor
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Rect
 import android.util.Log
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
-import androidx.core.graphics.minus
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
 import com.example.dormentor.ml.AlexNetV2
@@ -48,7 +45,7 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
                         bitmap?.let {
                             var isCreated = bitmapViewModel.getIsBitmapCreated().value
                             if(!isCreated!!) {
-                                val eyeBitmap = extractEyeRegion(face, it)
+                                val eyeBitmap = extractEyeRegion(face, it,10)
                                 val eyeBitmapBig =
                                     BitmapUtils.getResizedBitmap(eyeBitmap, 256, 256)
                                 val mouthBitmap = extractMouthRegion(face, it)
@@ -94,7 +91,7 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
     }
 
 
-    private fun extractEyeRegion(face: Face, srcBitmap: Bitmap) : Bitmap? {
+    private fun extractEyeRegion(face: Face, srcBitmap: Bitmap, margin: Int) : Bitmap? {
         val rightEyeContours = face.getContour(FaceContour.LEFT_EYE)?.points
         val rightEyeBrowContours = face.getContour(FaceContour.LEFT_EYEBROW_TOP)?.points
 
@@ -126,13 +123,24 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
             //2. Calculating the height
             val height = abs((lowestY - highestY).toInt())
 
+           // case without margin
+//            return Bitmap.createBitmap(
+//                srcBitmap,
+//                nearestX.toInt(),
+//                highestY.toInt(),
+//                width,
+//                height
+//            )
+            //case with margin
             return Bitmap.createBitmap(
                 srcBitmap,
                 nearestX.toInt(),
                 highestY.toInt(),
-                width,
-                height
+                min((width+margin).toInt(),srcBitmap.width),
+                min((height+margin).toInt(),srcBitmap.height)
+
             )
+
 
         } else {
             return null
