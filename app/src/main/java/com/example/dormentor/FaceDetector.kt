@@ -48,15 +48,11 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
                                 val eyeBitmap = extractEyeRegion(face, it,10)
                                 val eyeBitmapBig =
                                     BitmapUtils.getResizedBitmap(eyeBitmap, 256, 256)
-                                val mouthBitmap = extractMouthRegion(face, it)
-                                val mouthBitmapBig =
-                                    BitmapUtils.getResizedBitmap(mouthBitmap, 256, 256)
                                 eyeBitmapBig?.let { it1 -> bitmapViewModel.changeEyeBitmap(it1) }
-                                mouthBitmapBig?.let { it2 -> bitmapViewModel.changeMouthBitmap(it2) }
                                 val tfEyeImageA = TensorImage.fromBitmap(eyeBitmapBig)
                                 val tfEyeImage = TensorImage.createFrom(tfEyeImageA, DataType.FLOAT32)
                                 var outputs =
-                                    alexNetV2.process(tfEyeImageA).probabilityAsCategoryList
+                                    alexNetV2.process(tfEyeImage).probabilityAsCategoryList
                                              .apply {
                                                      sortByDescending { it.score } // Sort with highest confidence first
                                                  }
@@ -66,15 +62,25 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
                                 }
                                 Log.d(TAG, "Eye status : " + outputs[0].label + " * " + outputs[0].score)
                                 bitmapViewModel.changeEyeStatusLabelScore(outputs[0].label, outputs[0].score)
-                                val tfMouthImageA = TensorImage.fromBitmap(mouthBitmapBig)
-                                val tfMouthImage = TensorImage.createFrom(tfMouthImageA, DataType.FLOAT32)
-    //                          val wholePictureResizd = BitmapUtils.getResizedBitmap(bitmap,256,256)
-    //                          val tfWholePicture = TensorImage.fromBitmap(wholePictureResizd)
-                                outputs = alexNetV2.process(tfMouthImage).probabilityAsCategoryList
-                                    .apply {
-                                        sortByDescending { it.score } // Sort with highest confidence first
-                                    }
-                                Log.d(TAG, "Mouth status : " + outputs[0].label + " * " + outputs[0].score)
+
+
+                                val mouthBitmap = extractMouthRegion(face, it)
+                                mouthBitmap?.let { bimp ->
+                                    val mouthBitmapBig =
+                                        BitmapUtils.getResizedBitmap(bimp, 256, 256)
+//                                    mouthBitmapBig?.let { it2 -> bitmapViewModel.changeMouthBitmap(it2) }
+                                    val tfMouthImageA = TensorImage.fromBitmap(mouthBitmapBig)
+                                    val tfMouthImage = TensorImage.createFrom(tfMouthImageA, DataType.FLOAT32)
+                                    val copyBitmap = bitmap.copy(bitmap.config,true)
+                                    val wholePictureResizd = BitmapUtils.getResizedBitmap(copyBitmap,256,256)
+                                    wholePictureResizd?.let { it2 -> bitmapViewModel.changeMouthBitmap(it2) }
+                                    val tfWholePicture = TensorImage.fromBitmap(wholePictureResizd)
+                                    outputs = alexNetV2.process(tfWholePicture).probabilityAsCategoryList
+                                        .apply {
+                                            sortByDescending { it.score } // Sort with highest confidence first
+                                        }
+                                    Log.d(TAG, "Mouth status : " + outputs[0].label + " * " + outputs[0].score)
+                                }
                                 bitmapViewModel.changeIsBitmapCreated()
                                  }
                             }
@@ -175,14 +181,24 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
             val lowestY = lowLipBottom.maxByOrNull { it.y }!!.y
                 //2. Calculating the height :
             val height = abs(lowestY - highestY).toInt()
-
-            return Bitmap.createBitmap(
+            Log.d(TAG,"****"+srcBitmap.height)
+            Log.d(TAG,"****"+highestY)
+            Log.d(TAG,"****"+height)
+            Log.d(TAG,"****"+(highestY.toInt()+srcBitmap.height))
+            var result : Bitmap? = null
+            try {
+             result =  Bitmap.createBitmap(
                 srcBitmap,
                 nearestX.toInt(),
                 highestY.toInt(),
                 width,
                 height
             )
+            } catch (e: java.lang.IllegalArgumentException) {
+                e.message?.let { Log.e(TAG, it) }
+            } finally {
+                return result
+            }
 
         } else {
             return null
