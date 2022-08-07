@@ -27,7 +27,6 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
 
     val bitmapViewModel : BitmapViewModel = ViewModelProvider(lifecycleOwner as ViewModelStoreOwner).get(BitmapViewModel::class.java)
     private val alexNetV2 = AlexNetV2.newInstance(lifecycleOwner as Context)
-//    private val alexNetV1 = AlexNetV1.newInstance(lifecycleOwner as Context)
 
     @SuppressLint("UnsafeOptInUsageError")
     override fun analyze(image: ImageProxy) {
@@ -58,13 +57,14 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
                                                  }
 
                                 outputs.forEach {
-                                    Log.d(TAG, it.label + " " + it.score)
+                                    Log.d(TAG, "Eye is: "+it.label + " " + it.score)
                                 }
                                 Log.d(TAG, "Eye status : " + outputs[0].label + " * " + outputs[0].score)
                                 bitmapViewModel.changeEyeStatusLabelScore(outputs[0].label, outputs[0].score)
 
 
                                 val mouthBitmap = extractMouthRegion(face, it)
+                                //TODO : for now, we are extracting the mouth region, but we are not using it because the model is trained to use the whole driver image, but this method is not giving good results
                                 mouthBitmap?.let { bimp ->
                                     val mouthBitmapBig =
                                         BitmapUtils.getResizedBitmap(bimp, 256, 256)
