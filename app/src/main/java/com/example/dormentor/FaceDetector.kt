@@ -9,7 +9,9 @@ import androidx.camera.core.ImageProxy
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
-import com.example.dormentor.ml.AlexNetV2
+//import com.example.dormentor.ml.AlexNetV2
+import com.example.dormentor.ml.MobileNetEyesRLDD55
+import com.example.dormentor.ml.MobileNetMouthCrop55
 import com.example.dormentor.ui.BitmapViewModel
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.Face
@@ -26,7 +28,9 @@ import kotlin.math.min
 class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.Analyzer {
 
     val bitmapViewModel : BitmapViewModel = ViewModelProvider(lifecycleOwner as ViewModelStoreOwner).get(BitmapViewModel::class.java)
-    private val alexNetV2 = AlexNetV2.newInstance(lifecycleOwner as Context)
+//    private val alexNetV2 = AlexNetV2.newInstance(lifecycleOwner as Context)
+    private val mobileNetEyesRLDD55 = MobileNetEyesRLDD55.newInstance(lifecycleOwner as Context)
+    private val mobileNetMouthCrop55 = MobileNetMouthCrop55.newInstance(lifecycleOwner as Context)
 
     @SuppressLint("UnsafeOptInUsageError")
     override fun analyze(image: ImageProxy) {
@@ -46,12 +50,12 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
                             if(!isCreated!!) {
                                 val eyeBitmap = extractEyeRegion(face, it,10)
                                 val eyeBitmapBig =
-                                    BitmapUtils.getResizedBitmap(eyeBitmap, 256, 256)
+                                    BitmapUtils.getResizedBitmap(eyeBitmap, 55, 55)
                                 eyeBitmapBig?.let { it1 -> bitmapViewModel.changeEyeBitmap(it1) }
                                 val tfEyeImageA = TensorImage.fromBitmap(eyeBitmapBig)
                                 val tfEyeImage = TensorImage.createFrom(tfEyeImageA, DataType.FLOAT32)
                                 var outputs =
-                                    alexNetV2.process(tfEyeImage).probabilityAsCategoryList
+                                    mobileNetEyesRLDD55.process(tfEyeImage).probabilityAsCategoryList
                                              .apply {
                                                      sortByDescending { it.score } // Sort with highest confidence first
                                                  }
@@ -64,22 +68,22 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
 
 
                                 val mouthBitmap = extractMouthRegion(face, it)
-                                //TODO : for now, we are extracting the mouth region, but we are not using it because the model is trained to use the whole driver image, but this method is not giving good results
                                 mouthBitmap?.let { bimp ->
                                     val mouthBitmapBig =
-                                        BitmapUtils.getResizedBitmap(bimp, 256, 256)
-//                                    mouthBitmapBig?.let { it2 -> bitmapViewModel.changeMouthBitmap(it2) }
+                                        BitmapUtils.getResizedBitmap(bimp, 55, 55)
+                                    mouthBitmapBig?.let { it2 -> bitmapViewModel.changeMouthBitmap(it2) }
                                     val tfMouthImageA = TensorImage.fromBitmap(mouthBitmapBig)
                                     val tfMouthImage = TensorImage.createFrom(tfMouthImageA, DataType.FLOAT32)
-                                    val copyBitmap = bitmap.copy(bitmap.config,true)
-                                    val wholePictureResizd = BitmapUtils.getResizedBitmap(copyBitmap,256,256)
-                                    wholePictureResizd?.let { it2 -> bitmapViewModel.changeMouthBitmap(it2) }
-                                    val tfWholePicture = TensorImage.fromBitmap(wholePictureResizd)
-                                    outputs = alexNetV2.process(tfWholePicture).probabilityAsCategoryList
+//                                    val copyBitmap = bitmap.copy(bitmap.config,true)
+//                                    val wholePictureResizd = BitmapUtils.getResizedBitmap(copyBitmap,256,256)
+//                                    wholePictureResizd?.let { it2 -> bitmapViewModel.changeMouthBitmap(it2) }
+//                                    val tfWholePicture = TensorImage.fromBitmap(wholePictureResizd)
+                                    var outputs2 = mobileNetMouthCrop55.process(tfMouthImage).probabilityAsCategoryList
                                         .apply {
                                             sortByDescending { it.score } // Sort with highest confidence first
                                         }
-                                    Log.d(TAG, "Mouth status : " + outputs[0].label + " * " + outputs[0].score)
+                                    Log.d(TAG, "Mouth status : " + outputs2[0].label + " * " + outputs2[0].score)
+                                    bitmapViewModel.changeMouthStatusLabelScore(outputs2[0].label, outputs2[0].score)
                                 }
                                 bitmapViewModel.changeIsBitmapCreated()
                                  }
@@ -215,6 +219,5 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
             .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
             .build()
         val detector = FaceDetection.getClient(options)
-        private var bitmapAlreadyCreated : Boolean = false
     }
 }

@@ -17,7 +17,8 @@
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:layout_margin="20dp"
-      android:textSize="16dp"
+      android:textSize="20dp"
+      android:textColor="@color/black"
       app:layout_constraintEnd_toEndOf="parent"
       app:layout_constraintStart_toEndOf="@+id/LabelEye"
       app:layout_constraintTop_toTopOf="parent" />
@@ -27,9 +28,54 @@
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:layout_margin="20dp"
-      android:textSize="16dp"
+      android:textColor="@color/black"
+      android:textSize="20dp"
       app:layout_constraintStart_toStartOf="parent"
       app:layout_constraintTop_toTopOf="@+id/previewView" />
+
+  <EditText
+      android:id="@+id/ScoreMouth"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_margin="20dp"
+      android:textColor="@color/black"
+      android:textSize="20dp"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toEndOf="@+id/LabelMouth"
+      app:layout_constraintTop_toBottomOf="@+id/ScoreEye" />
+
+  <EditText
+      android:id="@+id/LabelMouth"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:textColor="@color/black"
+      android:layout_margin="20dp"
+      android:textSize="20dp"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/LabelEye" />
+
+  <TextView
+      android:id="@+id/perclos"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_margin="20dp"
+      android:textColor="@color/black"
+      android:text=""
+      android:textSize="20dp"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/LabelMouth" />
+
+  <TextView
+      android:id="@+id/fom"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_margin="20dp"
+      android:text=""
+      android:textColor="@color/black"
+      android:textSize="20dp"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/perclos" />
+
 
   <ImageView
       android:id="@+id/eyeImageView"

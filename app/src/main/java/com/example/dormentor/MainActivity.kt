@@ -19,6 +19,9 @@ import com.example.dormentor.databinding.ActivityMainBinding
 import com.example.dormentor.ui.BitmapViewModel
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.text.DecimalFormat
+import java.math.RoundingMode
+
 
 class MainActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityMainBinding
@@ -37,24 +40,59 @@ class MainActivity : AppCompatActivity() {
         }
         bitmapViewModel.getEyeBitmap().observe(this,eyeBitmapObserver)
         val mouthBitmapObserver = Observer<Bitmap> {
-            Log.d(TAG,"image changed")
             viewBinding.mouthImageView.setImageBitmap(it)
         }
         bitmapViewModel.getMouthBitmap().observe(this,mouthBitmapObserver)
 
-        val EyeStatLabelObserver = Observer<String> {
+        val eyeStatLabelObserver = Observer<String> {
             viewBinding.LabelEye.setText(it)
         }
-        bitmapViewModel.getEyeStatusLabel().observe(this,EyeStatLabelObserver)
+        bitmapViewModel.getEyeStatusLabel().observe(this,eyeStatLabelObserver)
 
-        val EyeStatScoreObserver = Observer<Float> {
+        val eyeStatScoreObserver = Observer<Float> {
             viewBinding.ScoreEye.setText(it.toString())
         }
-        bitmapViewModel.getEyeStatusScore().observe(this,EyeStatScoreObserver)
+        bitmapViewModel.getEyeStatusScore().observe(this,eyeStatScoreObserver)
 
         viewBinding.retryButton.setOnClickListener {
             bitmapViewModel.changeIsBitmapCreated()
         }
+
+        val mouthStatLabelObserver = Observer<String> {
+            viewBinding.LabelMouth.setText(it)
+        }
+        bitmapViewModel.getmouthStatusLabel().observe(this,mouthStatLabelObserver)
+
+        val mouthStatScoreObserver = Observer<Float> {
+            viewBinding.ScoreMouth.setText(it.toString())
+        }
+        bitmapViewModel.getmouthStatusScore().observe(this,mouthStatScoreObserver)
+
+        val df = DecimalFormat("#.##")
+        df.roundingMode = RoundingMode.DOWN
+
+        val fomObserver = Observer<Array<Int>> {
+            val closedFrames = it[0]
+            var total = it[1]
+            total = if (total == 0) 1 else total
+            var perc = df.format(closedFrames.toFloat()/total.toFloat()*100.0)
+            Log.d(TAG,perc.toString())
+            viewBinding.fom.setText("FOM = "+closedFrames.toString()+"/"+total.toString()+" = "+perc.toString()+"%")
+        }
+
+        bitmapViewModel.getFom().observe(this,fomObserver)
+
+        val perclosObserver = Observer<Array<Int>> {
+            val closedFrames = it[0]
+            var total = it[1]
+            total = if (total == 0) 1 else total
+            var perc = df.format(closedFrames.toFloat()/total.toFloat()*100.0)
+            Log.d(TAG,perc.toString())
+            viewBinding.perclos.setText("PERCLOS = "+closedFrames.toString()+"/"+total.toString()+" = "+perc.toString()+"%")
+        }
+
+        bitmapViewModel.getPerclos().observe(this,perclosObserver)
+
 
         //check if we already have the permissions needed, otherwise request them
         if(allPermissionsGranted()) {
