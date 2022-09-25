@@ -5,6 +5,8 @@ import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.graphics.Bitmap
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.camera.core.CameraSelector
@@ -16,6 +18,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.example.dormentor.databinding.ActivityMainBinding
+import com.example.dormentor.measuers.PerclosController
 import com.example.dormentor.ui.BitmapViewModel
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -35,6 +38,10 @@ class MainActivity : AppCompatActivity() {
         //ViewModel to display the image when ready
         val bitmapViewModel : BitmapViewModel = ViewModelProvider(this).get(BitmapViewModel::class.java)
 
+//        used to round probabilities and percentages
+        val df = DecimalFormat("#.##")
+        df.roundingMode = RoundingMode.DOWN
+
         val eyeBitmapObserver = Observer<Bitmap> {
            viewBinding.eyeImageView.setImageBitmap(it)
         }
@@ -45,12 +52,18 @@ class MainActivity : AppCompatActivity() {
         bitmapViewModel.getMouthBitmap().observe(this,mouthBitmapObserver)
 
         val eyeStatLabelObserver = Observer<String> {
+            if (it == "Closed") {
+                viewBinding.statusEyeIcon.setImageResource(R.mipmap.ic_closed_eye_foreground)
+            } else {
+                viewBinding.statusEyeIcon.setImageResource(R.mipmap.ic_open_eye_foreground)
+            }
             viewBinding.LabelEye.setText(it)
         }
         bitmapViewModel.getEyeStatusLabel().observe(this,eyeStatLabelObserver)
 
         val eyeStatScoreObserver = Observer<Float> {
-            viewBinding.ScoreEye.setText(it.toString())
+            var perc = df.format(it.toFloat()*100.0)
+            viewBinding.ScoreEye.setText("$perc %")
         }
         bitmapViewModel.getEyeStatusScore().observe(this,eyeStatScoreObserver)
 
@@ -59,17 +72,21 @@ class MainActivity : AppCompatActivity() {
         }
 
         val mouthStatLabelObserver = Observer<String> {
+            if (it == "no_yawn") {
+                viewBinding.statusMouthIcon.setImageResource(R.mipmap.ic_no_yawn_foreground)
+            } else {
+                viewBinding.statusMouthIcon.setImageResource(R.mipmap.ic_yawn_foreground)
+            }
             viewBinding.LabelMouth.setText(it)
         }
         bitmapViewModel.getmouthStatusLabel().observe(this,mouthStatLabelObserver)
 
         val mouthStatScoreObserver = Observer<Float> {
-            viewBinding.ScoreMouth.setText(it.toString())
+            var perc = df.format(it.toFloat()*100.0)
+            viewBinding.ScoreMouth.setText("$perc %")
         }
         bitmapViewModel.getmouthStatusScore().observe(this,mouthStatScoreObserver)
 
-        val df = DecimalFormat("#.##")
-        df.roundingMode = RoundingMode.DOWN
 
         val fomObserver = Observer<Array<Int>> {
             val closedFrames = it[0]
@@ -93,17 +110,34 @@ class MainActivity : AppCompatActivity() {
 
         bitmapViewModel.getPerclos().observe(this,perclosObserver)
 
-
-        //check if we already have the permissions needed, otherwise request them
-        if(allPermissionsGranted()) {
-            startCamera()
-        } else {
-            ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
+        val elapsedTimeObserver = Observer<Long> {
+            viewBinding.ElapsedTime.setText(it.toString()+" ms")
         }
+        bitmapViewModel.getElapsed().observe(this,elapsedTimeObserver)
 
-        //Executor thread used for ImagesAnalyzer (should be killed onDestroy)
-         cameraExecutor = Executors.newSingleThreadExecutor()
-    }
+
+        val perclosHandler = Handler(Looper.getMainLooper())
+
+        val perclosRunnable = object : Runnable {
+            override fun run(){
+                PerclosController.updatePerclos()
+                perclosHandler.postDelayed(this,10*1000)
+            }
+        }
+        perclosHandler.postDelayed({
+                perclosRunnable.run()
+            },5000)
+
+            //check if we already have the permissions needed, otherwise request them
+            if(allPermissionsGranted()) {
+                startCamera()
+            } else {
+                ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
+            }
+
+            //Executor thread used for ImagesAnalyzer (should be killed onDestroy)
+            cameraExecutor = Executors.newSingleThreadExecutor()
+        }
 
     override fun onDestroy() {
         super.onDestroy()

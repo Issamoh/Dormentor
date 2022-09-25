@@ -10,99 +10,167 @@
   <androidx.camera.view.PreviewView
       android:id="@+id/previewView"
       android:layout_width="match_parent"
-      android:layout_height="match_parent"></androidx.camera.view.PreviewView>
+      android:layout_height="match_parent"
+      tools:layout_editor_absoluteX="34dp"
+      tools:layout_editor_absoluteY="-87dp"></androidx.camera.view.PreviewView>
 
-  <EditText
-      android:id="@+id/ScoreEye"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_margin="20dp"
-      android:textSize="20dp"
-      android:textColor="@color/black"
-      app:layout_constraintEnd_toEndOf="parent"
-      app:layout_constraintStart_toEndOf="@+id/LabelEye"
-      app:layout_constraintTop_toTopOf="parent" />
+
 
   <EditText
       android:id="@+id/LabelEye"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:layout_margin="20dp"
+      android:background="@drawable/bgcomponent"
+      android:padding="7dp"
       android:textColor="@color/black"
       android:textSize="20dp"
       app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toTopOf="@+id/previewView" />
+      app:layout_constraintTop_toTopOf="@+id/previewView"
+      android:visibility="invisible"/>
 
-  <EditText
-      android:id="@+id/ScoreMouth"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_margin="20dp"
-      android:textColor="@color/black"
-      android:textSize="20dp"
-      app:layout_constraintEnd_toEndOf="parent"
-      app:layout_constraintStart_toEndOf="@+id/LabelMouth"
-      app:layout_constraintTop_toBottomOf="@+id/ScoreEye" />
+
 
   <EditText
       android:id="@+id/LabelMouth"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:textColor="@color/black"
       android:layout_margin="20dp"
+      android:background="@drawable/bgcomponent"
+      android:padding="7dp"
+      android:textColor="@color/black"
       android:textSize="20dp"
       app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toBottomOf="@+id/LabelEye" />
+      app:layout_constraintTop_toBottomOf="@+id/LabelEye"
+      android:visibility="invisible"/>
 
   <TextView
       android:id="@+id/perclos"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:layout_margin="20dp"
-      android:textColor="@color/black"
+      android:background="@drawable/bgcomponent"
+      android:padding="7dp"
       android:text=""
+      android:textColor="@color/black"
       android:textSize="20dp"
       app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toBottomOf="@+id/LabelMouth" />
+      app:layout_constraintTop_toBottomOf="@+id/LabelMouth"
+      />
 
   <TextView
       android:id="@+id/fom"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:layout_margin="20dp"
+      android:background="@drawable/bgcomponent"
+      android:padding="7dp"
       android:text=""
       android:textColor="@color/black"
       android:textSize="20dp"
       app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toBottomOf="@+id/perclos" />
+      app:layout_constraintTop_toBottomOf="@+id/perclos"
+      />
 
-
-  <ImageView
-      android:id="@+id/eyeImageView"
+  <EditText
+      android:id="@+id/ElapsedTime"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      app:layout_constraintBottom_toTopOf="@+id/retryButton"
-      app:layout_constraintEnd_toEndOf="@+id/previewView"
-      app:layout_constraintStart_toStartOf="@+id/mouthImageView"
-      android:layout_margin="20dp"/>
+      android:layout_margin="40dp"
+      android:background="@drawable/bgcomponent"
+      android:padding="7dp"
+      android:textColor="#1C3879"
+      android:textSize="20dp"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintTop_toTopOf="@+id/previewView" />
 
-  <ImageView
-      android:id="@+id/mouthImageView"
-      android:layout_width="wrap_content"
+
+  <LinearLayout
+      android:id="@+id/linearEye"
+      android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      app:layout_constraintBottom_toTopOf="@+id/retryButton"
-      app:layout_constraintEnd_toEndOf="@+id/eyeImageView"
-      app:layout_constraintStart_toStartOf="@+id/previewView"
-      android:layout_margin="20dp"/>
+      android:layout_marginBottom="20dp"
+      android:gravity="center_vertical"
+      app:layout_constraintBottom_toTopOf="@+id/linearMouth">
+
+    <ImageView
+        android:id="@+id/eyeImageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="30dp"
+        android:background="@drawable/borderimage"
+        android:padding="10dp" />
+
+    <ImageView
+        android:id="@+id/statusEyeIcon"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginStart="30dp"
+        android:background="@drawable/bgcomponent"
+        android:padding="10dp"/>
+
+    <EditText
+        android:id="@+id/ScoreEye"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="30dp"
+        android:background="@drawable/bgcomponent"
+        android:padding="7dp"
+        android:textColor="#1C3879"
+        android:textSize="20dp"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+  </LinearLayout>
+
+  <LinearLayout
+      android:id="@+id/linearMouth"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      app:layout_constraintBottom_toBottomOf="@+id/previewView"
+      android:layout_marginBottom="80dp"
+      android:gravity="center_vertical">
+    <ImageView
+        android:id="@+id/mouthImageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="30dp"
+        android:background="@drawable/borderimage"
+        android:padding="10dp"/>
+
+    <ImageView
+        android:id="@+id/statusMouthIcon"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginStart="30dp"
+        android:background="@drawable/bgcomponent"
+        android:padding="10dp"/>
+
+    <EditText
+        android:id="@+id/ScoreMouth"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="30dp"
+        android:background="@drawable/bgcomponent"
+        android:padding="7dp"
+        android:textColor="#1C3879"
+        android:textSize="20dp" />
+
+  </LinearLayout>
 
   <ImageButton
       android:id="@+id/retryButton"
       android:layout_width="40dp"
       android:layout_height="40dp"
+      android:layout_marginEnd="40dp"
       android:layout_marginBottom="40dp"
+      android:background="@drawable/bgcomponent"
       android:scaleType="fitCenter"
-      android:background="@drawable/ic_retry"
       app:layout_constraintBottom_toBottomOf="parent"
       app:layout_constraintEnd_toEndOf="parent"
-      app:layout_constraintStart_toStartOf="parent" />
+      app:srcCompat="@drawable/ic_retry" />
+
+
+
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>

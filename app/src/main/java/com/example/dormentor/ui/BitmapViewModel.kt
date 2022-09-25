@@ -1,9 +1,11 @@
 package com.example.dormentor.ui
 
 import android.graphics.Bitmap
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.dormentor.FaceDetector
 
 class BitmapViewModel:ViewModel() {
     private var eyeBitmapLiveData : MutableLiveData<Bitmap> = MutableLiveData<Bitmap>()
@@ -15,6 +17,7 @@ class BitmapViewModel:ViewModel() {
     private var isbitmapCreated : MutableLiveData<Boolean> = MutableLiveData<Boolean>(false)
     private var perclos : MutableLiveData<Array<Int>> = MutableLiveData<Array<Int>>(arrayOf(0,0))
     private var fom : MutableLiveData<Array<Int>> = MutableLiveData<Array<Int>>(arrayOf(0,0))
+    private var elapsedTime : MutableLiveData<Long> = MutableLiveData<Long>()
 
     public fun getEyeBitmap(): LiveData<Bitmap> {
         return eyeBitmapLiveData
@@ -56,7 +59,6 @@ class BitmapViewModel:ViewModel() {
         mouthStatusScore.value = newScore
 
         var newFom = fom.value
-
         if (newScore > 0.8) {
             if (newLabel == "yawn") {
                 newFom!![0]++
@@ -87,6 +89,13 @@ class BitmapViewModel:ViewModel() {
 
     fun changeIsBitmapCreated() {
         isbitmapCreated.value = isbitmapCreated.value != true
+    }
+
+    fun getElapsed():LiveData<Long> {
+        return elapsedTime
+    }
+    fun changeElapsed(newValue: Long) {
+        elapsedTime.value = newValue
     }
 
 }

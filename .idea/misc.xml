@@ -3,7 +3,14 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="..\:/ESI/3CSIL/PFE/Programming/Android/Dormentor/app/src/main/res/layout/activity_main.xml" value="0.30647709320695105" />
+        <entry key="..\:/ESI/3CSIL/PFE/Programming/Android/Dormentor/app/src/main/res/drawable/bgcomponent.xml" value="0.1" />
+        <entry key="..\:/ESI/3CSIL/PFE/Programming/Android/Dormentor/app/src/main/res/drawable/bgiconstate.xml" value="0.196" />
+        <entry key="..\:/ESI/3CSIL/PFE/Programming/Android/Dormentor/app/src/main/res/drawable/borderimage.xml" value="0.136" />
+        <entry key="..\:/ESI/3CSIL/PFE/Programming/Android/Dormentor/app/src/main/res/drawable/ic_closed_eye_background.xml" value="0.154" />
+        <entry key="..\:/ESI/3CSIL/PFE/Programming/Android/Dormentor/app/src/main/res/drawable/ic_retry.xml" value="0.136" />
+        <entry key="..\:/ESI/3CSIL/PFE/Programming/Android/Dormentor/app/src/main/res/layout/activity_main.xml" value="0.22" />
+        <entry key="..\:/ESI/3CSIL/PFE/Programming/Android/Dormentor/app/src/main/res/mipmap-anydpi-v26/ic_closed_eye.xml" value="0.154" />
+        <entry key="..\:/ESI/3CSIL/PFE/Programming/Android/Dormentor/app/src/main/res/mipmap-anydpi-v26/ic_closed_eye_round.xml" value="0.154" />
       </map>
     </option>
   </component>

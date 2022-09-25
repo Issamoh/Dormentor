@@ -3,15 +3,16 @@ package com.example.dormentor
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
-//import com.example.dormentor.ml.AlexNetV2
-import com.example.dormentor.ml.MobileNetEyesRLDD55
-import com.example.dormentor.ml.MobileNetMouthCrop55
+import com.example.dormentor.measuers.PerclosController
+import com.example.dormentor.ml.*
 import com.example.dormentor.ui.BitmapViewModel
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.Face
@@ -24,13 +25,19 @@ import util.BitmapUtils
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
-
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.Analyzer {
 
     val bitmapViewModel : BitmapViewModel = ViewModelProvider(lifecycleOwner as ViewModelStoreOwner).get(BitmapViewModel::class.java)
 //    private val alexNetV2 = AlexNetV2.newInstance(lifecycleOwner as Context)
-    private val mobileNetEyesRLDD55 = MobileNetEyesRLDD55.newInstance(lifecycleOwner as Context)
-    private val mobileNetMouthCrop55 = MobileNetMouthCrop55.newInstance(lifecycleOwner as Context)
+//    private val mobileNetEyesRLDD55 = MobileNetEyesRLDD55.newInstance(lifecycleOwner as Context)
+//    private val mobileNetMouthCrop55 = MobileNetMouthCrop55.newInstance(lifecycleOwner as Context)
+//    private val mobileNetMouthCrop55V3 = MobileNetMouthCrop55V3.newInstance(lifecycleOwner as Context)
+    private val mobileNetV3MouthCrop55V4 = MobileNetV3MouthCrop55V4.newInstance(lifecycleOwner as Context)
+    private val mobileNetV3EyesV4 = MobileNetV3EyesV4.newInstance(lifecycleOwner as Context)
+
+
 
     @SuppressLint("UnsafeOptInUsageError")
     override fun analyze(image: ImageProxy) {
@@ -42,20 +49,28 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
         val img = image.image
         val inputImage = img?.let { InputImage.fromMediaImage(it,image.imageInfo.rotationDegrees) }
         if (inputImage != null) {
+            val begin = System.currentTimeMillis()
             detector.process(inputImage)
                 .addOnSuccessListener { faces ->
-                    for (face in faces) {
+                        for (face in faces) {
                         bitmap?.let {
                             var isCreated = bitmapViewModel.getIsBitmapCreated().value
-                            if(!isCreated!!) {
-                                val eyeBitmap = extractEyeRegion(face, it,10)
+                            if(!isCreated!! || true) {
+                                val eyeBitmap = extractEyeRegion(face, it,5)
+                                eyeBitmap?.let { ms ->
+                                    val copyeyeBitmap = ms.copy(ms.config,true)
+                                    val wholePictureResizd1 = BitmapUtils.getResizedBitmap(copyeyeBitmap,256,256)
+                                    wholePictureResizd1?.let { it1 -> bitmapViewModel.changeEyeBitmap(it1) }
+                                }
                                 val eyeBitmapBig =
                                     BitmapUtils.getResizedBitmap(eyeBitmap, 55, 55)
-                                eyeBitmapBig?.let { it1 -> bitmapViewModel.changeEyeBitmap(it1) }
+                                eyeBitmapBig?.let {
+//                                        it1 -> bitmapViewModel.changeEyeBitmap(it1)
+                                }
                                 val tfEyeImageA = TensorImage.fromBitmap(eyeBitmapBig)
                                 val tfEyeImage = TensorImage.createFrom(tfEyeImageA, DataType.FLOAT32)
                                 var outputs =
-                                    mobileNetEyesRLDD55.process(tfEyeImage).probabilityAsCategoryList
+                                    mobileNetV3EyesV4.process(tfEyeImage).probabilityAsCategoryList
                                              .apply {
                                                      sortByDescending { it.score } // Sort with highest confidence first
                                                  }
@@ -64,24 +79,32 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
                                     Log.d(TAG, "Eye is: "+it.label + " " + it.score)
                                 }
                                 Log.d(TAG, "Eye status : " + outputs[0].label + " * " + outputs[0].score)
+
+                                val current = LocalDateTime.now()
+                                PerclosController.storage.add(arrayOf(outputs[0].label,outputs[0].score,current))
                                 bitmapViewModel.changeEyeStatusLabelScore(outputs[0].label, outputs[0].score)
 
 
-                                val mouthBitmap = extractMouthRegion(face, it)
+                                val mouthBitmap = extractMouthRegion(face, it, 20)
+                                mouthBitmap?.let { bs ->
+                                    val copymouthBitmap = bs.copy(bs.config,true)
+                                    val wholePictureResizd = BitmapUtils.getResizedBitmap(copymouthBitmap,256,256)
+                                    wholePictureResizd?.let { it2 -> bitmapViewModel.changeMouthBitmap(it2) }
+                                }
                                 mouthBitmap?.let { bimp ->
                                     val mouthBitmapBig =
                                         BitmapUtils.getResizedBitmap(bimp, 55, 55)
-                                    mouthBitmapBig?.let { it2 -> bitmapViewModel.changeMouthBitmap(it2) }
+                                    mouthBitmapBig?.let {
+//                                            it2 -> bitmapViewModel.changeMouthBitmap(it2)
+                                    }
                                     val tfMouthImageA = TensorImage.fromBitmap(mouthBitmapBig)
                                     val tfMouthImage = TensorImage.createFrom(tfMouthImageA, DataType.FLOAT32)
-//                                    val copyBitmap = bitmap.copy(bitmap.config,true)
-//                                    val wholePictureResizd = BitmapUtils.getResizedBitmap(copyBitmap,256,256)
-//                                    wholePictureResizd?.let { it2 -> bitmapViewModel.changeMouthBitmap(it2) }
-//                                    val tfWholePicture = TensorImage.fromBitmap(wholePictureResizd)
-                                    var outputs2 = mobileNetMouthCrop55.process(tfMouthImage).probabilityAsCategoryList
+                                    var outputs2 = mobileNetV3MouthCrop55V4.process(tfMouthImage).probabilityAsCategoryList
                                         .apply {
                                             sortByDescending { it.score } // Sort with highest confidence first
                                         }
+                                    val end = System.currentTimeMillis()
+                                    bitmapViewModel.changeElapsed(end-begin)
                                     Log.d(TAG, "Mouth status : " + outputs2[0].label + " * " + outputs2[0].score)
                                     bitmapViewModel.changeMouthStatusLabelScore(outputs2[0].label, outputs2[0].score)
                                 }
@@ -141,8 +164,10 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
 //                width,
 //                height
 //            )
+            var result : Bitmap? = null
+            try {
             //case with margin
-            return Bitmap.createBitmap(
+            result =  Bitmap.createBitmap(
                 srcBitmap,
                 nearestX.toInt(),
                 highestY.toInt(),
@@ -150,14 +175,19 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
                 min((height+margin).toInt(),srcBitmap.height)
 
             )
-
+            }
+            catch (e: java.lang.IllegalArgumentException) {
+                    e.message?.let { Log.e(TAG, it) }
+            } finally {
+                 return result
+            }
 
         } else {
             return null
         }
     }
 
-    private fun extractMouthRegion(face: Face, srcBitmap: Bitmap) : Bitmap? {
+    private fun extractMouthRegion(face: Face, srcBitmap: Bitmap, margin: Int) : Bitmap? {
         val upLipTop = face.getContour(FaceContour.UPPER_LIP_TOP)?.points
         val lowLipBottom = face.getContour(FaceContour.LOWER_LIP_BOTTOM)?.points
 
@@ -191,13 +221,22 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
             Log.d(TAG,"****"+(highestY.toInt()+srcBitmap.height))
             var result : Bitmap? = null
             try {
-             result =  Bitmap.createBitmap(
-                srcBitmap,
-                nearestX.toInt(),
-                highestY.toInt(),
-                width,
-                height
-            )
+//                case without margin
+//             result =  Bitmap.createBitmap(
+//                srcBitmap,
+//                nearestX.toInt(),
+//                highestY.toInt(),
+//                width,
+//                height
+//            )
+                result = Bitmap.createBitmap(
+                    srcBitmap,
+                    nearestX.toInt(),
+                    highestY.toInt(),
+                    min((width+margin).toInt(),srcBitmap.width),
+                    min((height+margin).toInt(),srcBitmap.height)
+
+                )
             } catch (e: java.lang.IllegalArgumentException) {
                 e.message?.let { Log.e(TAG, it) }
             } finally {
