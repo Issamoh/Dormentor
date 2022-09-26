@@ -3,6 +3,7 @@ package com.example.dormentor
 import android.Manifest
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.graphics.Bitmap
+import android.media.MediaPlayer
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
@@ -17,6 +18,8 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import com.example.dormentor.alerts.AlertViewModel
+import com.example.dormentor.alerts.AlertsController
 import com.example.dormentor.databinding.ActivityMainBinding
 import com.example.dormentor.measuers.PerclosController
 import com.example.dormentor.ui.BitmapViewModel
@@ -115,6 +118,26 @@ class MainActivity : AppCompatActivity() {
         }
         bitmapViewModel.getElapsed().observe(this,elapsedTimeObserver)
 
+
+        val alertViewModel : AlertViewModel = ViewModelProvider(this).get(AlertViewModel::class.java)
+        AlertsController.alertViewModel = alertViewModel
+
+//        we prepare id for each audio resource because doing it dynamically is slow
+        val alarmIds = arrayListOf(R.raw.alarm1,R.raw.alarm2,R.raw.alarm3,R.raw.alarm4)
+        val mediaPlayers = arrayListOf<MediaPlayer>()
+        for (id in alarmIds){
+            mediaPlayers.add(MediaPlayer.create(this, id))
+        }
+
+        var choosedAudioIdIndex = 0
+
+        val alertObserver = Observer<Boolean> {
+            if (it) {
+                mediaPlayers[choosedAudioIdIndex].start()
+                choosedAudioIdIndex = (choosedAudioIdIndex+1) % 3
+            }
+        }
+        alertViewModel.getisAlert().observe(this,alertObserver)
 
         val perclosHandler = Handler(Looper.getMainLooper())
 
