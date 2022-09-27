@@ -27,14 +27,9 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.Analyzer {
 
     val bitmapViewModel : BitmapViewModel = ViewModelProvider(lifecycleOwner as ViewModelStoreOwner).get(BitmapViewModel::class.java)
-//    private val alexNetV2 = AlexNetV2.newInstance(lifecycleOwner as Context)
-//    private val mobileNetEyesRLDD55 = MobileNetEyesRLDD55.newInstance(lifecycleOwner as Context)
-//    private val mobileNetMouthCrop55 = MobileNetMouthCrop55.newInstance(lifecycleOwner as Context)
-//    private val mobileNetMouthCrop55V3 = MobileNetMouthCrop55V3.newInstance(lifecycleOwner as Context)
     private val mobileNetV3MouthCrop55V4 = MobileNetV3MouthCrop55V4.newInstance(lifecycleOwner as Context)
     private val mobileNetV3EyesV4 = MobileNetV3EyesV4.newInstance(lifecycleOwner as Context)
 
@@ -55,18 +50,19 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
                 .addOnSuccessListener { faces ->
                         for (face in faces) {
                         bitmap?.let {
-                            var isCreated = bitmapViewModel.getIsBitmapCreated().value
-                            if(!isCreated!! || true) {
+                            var isDebugEnabled = bitmapViewModel.getIsdebugEnabled().value
+
+//                            EYE CLASSIFICATION
                                 val eyeBitmap = extractEyeRegion(face, it,5)
+                            if (isDebugEnabled!!){
                                 eyeBitmap?.let { ms ->
                                     val copyeyeBitmap = ms.copy(ms.config,true)
                                     val wholePictureResizd1 = BitmapUtils.getResizedBitmap(copyeyeBitmap,256,256)
                                     wholePictureResizd1?.let { it1 -> bitmapViewModel.changeEyeBitmap(it1) }
-                                }
+                                }}
                                 eyeBitmap?.let {
                                     val eyeBitmapBig =
                                         BitmapUtils.getResizedBitmap(eyeBitmap, 55, 55)
-
                                     val tfEyeImageA = TensorImage.fromBitmap(eyeBitmapBig)
                                     val tfEyeImage =
                                         TensorImage.createFrom(tfEyeImageA, DataType.FLOAT32)
@@ -92,18 +88,29 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
                                             current
                                         )
                                     )
+                                    if (isDebugEnabled!!){
                                     bitmapViewModel.changeEyeStatusLabelScore(
                                         outputs[0].label,
                                         outputs[0].score
                                     )
+                                    }
                                 }
 
+//                            MOUTH CLASSIFICATION :
+
                                 val mouthBitmap = extractMouthRegion(face, it, 20)
+                            if (isDebugEnabled!!) {
                                 mouthBitmap?.let { bs ->
-                                    val copymouthBitmap = bs.copy(bs.config,true)
-                                    val wholePictureResizd = BitmapUtils.getResizedBitmap(copymouthBitmap,256,256)
-                                    wholePictureResizd?.let { it2 -> bitmapViewModel.changeMouthBitmap(it2) }
+                                    val copymouthBitmap = bs.copy(bs.config, true)
+                                    val wholePictureResizd =
+                                        BitmapUtils.getResizedBitmap(copymouthBitmap, 256, 256)
+                                    wholePictureResizd?.let { it2 ->
+                                        bitmapViewModel.changeMouthBitmap(
+                                            it2
+                                        )
+                                    }
                                 }
+                            }
                                 mouthBitmap?.let { bimp ->
                                     val mouthBitmapBig =
                                         BitmapUtils.getResizedBitmap(bimp, 55, 55)
@@ -117,9 +124,14 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
                                             sortByDescending { it.score } // Sort with highest confidence first
                                         }
                                     val end = System.currentTimeMillis()
-                                    bitmapViewModel.changeElapsed(end-begin)
+                                    if (isDebugEnabled!!) {
+                                        bitmapViewModel.changeMouthStatusLabelScore(outputs2[0].label, outputs2[0].score)
+                                        bitmapViewModel.changeElapsed(end-begin)
+                                    }
 
                                     Log.d(TAG, "Mouth status : " + outputs2[0].label + " * " + outputs2[0].score)
+
+
                                     val current = LocalDateTime.now()
                                     FOMController.storage.add(
                                         arrayOf(
@@ -128,11 +140,9 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
                                             current
                                         )
                                     )
-                                    bitmapViewModel.changeMouthStatusLabelScore(outputs2[0].label, outputs2[0].score)
-                                }
-                                bitmapViewModel.changeIsBitmapCreated()
+                                    }
                                  }
-                            }
+
                     }
                 }
                 .addOnFailureListener { e ->

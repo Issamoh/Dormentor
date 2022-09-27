@@ -8,7 +8,7 @@ import java.time.temporal.ChronoUnit
 
 object PerclosController {
     var storage = arrayListOf<Array<Any>>()
-    private const val seuilPerclosToleree = 0.7
+    private const val seuilPerclosToleree = 0.6
 
 
     fun updatePerclos() {
@@ -22,9 +22,9 @@ object PerclosController {
             var perclos: Float
             var i = storage.size-1
             while(i>=0 && !stop) {
-                //Check first if record is not obsolete (datant de moins de 15 secondes)
+                //Check first if record is not obsolete (datant de moins de 12 secondes)
                 val diff = ChronoUnit.MILLIS.between(storage[i][2] as LocalDateTime,current)
-                if (diff >= 15*1000) {
+                if (diff >= 12*1000) {
                     stop = true
                 } else {
                     //check if probability of the classification is high i.e >80%
@@ -37,7 +37,7 @@ object PerclosController {
                 }
                 i--
             }
-            if (counterTotal >= 50) { //On exige de ne calculer la mesure perclos que si 50 images au moins ont été analysées
+            if (counterTotal >= 30) { //On exige de ne calculer la mesure perclos que si 30 images au moins ont été analysées
                 Log.d("PERCLOS_CONTROLLER", "$counterClosed / $counterTotal")
                 perclos = counterClosed.toFloat() / counterTotal.toFloat()
                 if (perclos > seuilPerclosToleree) {

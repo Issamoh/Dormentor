@@ -3,7 +3,6 @@ package com.example.dormentor
 import android.Manifest
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.graphics.Bitmap
-import android.graphics.drawable.TransitionDrawable
 import android.media.MediaPlayer
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -11,7 +10,6 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.View
-import android.view.ViewAnimationUtils
 import android.widget.Toast
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -42,7 +40,7 @@ class MainActivity : AppCompatActivity() {
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
 
-        //ViewModel to display the image when ready
+        //ViewModel to display the partial images and the results of their classification
         val bitmapViewModel : BitmapViewModel = ViewModelProvider(this).get(BitmapViewModel::class.java)
 
 //        used to round probabilities and percentages
@@ -53,6 +51,7 @@ class MainActivity : AppCompatActivity() {
            viewBinding.eyeImageView.setImageBitmap(it)
         }
         bitmapViewModel.getEyeBitmap().observe(this,eyeBitmapObserver)
+
         val mouthBitmapObserver = Observer<Bitmap> {
             viewBinding.mouthImageView.setImageBitmap(it)
         }
@@ -72,10 +71,6 @@ class MainActivity : AppCompatActivity() {
             viewBinding.ScoreEye.setText("$perc %")
         }
         bitmapViewModel.getEyeStatusScore().observe(this,eyeStatScoreObserver)
-
-        viewBinding.retryButton.setOnClickListener {
-            bitmapViewModel.changeIsBitmapCreated()
-        }
 
         val mouthStatLabelObserver = Observer<String> {
             if (it == "no_yawn") {
@@ -98,6 +93,29 @@ class MainActivity : AppCompatActivity() {
             viewBinding.ElapsedTime.setText(it.toString()+" ms")
         }
         bitmapViewModel.getElapsed().observe(this,elapsedTimeObserver)
+
+
+        viewBinding.debugButton.setOnClickListener {
+            bitmapViewModel.changeIsdebugEnabled()
+        }
+
+        val debugModeObserver = Observer<Boolean> {
+            var visibility:Int
+            if (it) {
+                visibility = View.VISIBLE
+            } else {
+                visibility = View.INVISIBLE
+            }
+            viewBinding.eyeImageView.visibility = visibility
+            viewBinding.mouthImageView.visibility = visibility
+            viewBinding.statusEyeIcon.visibility = visibility
+            viewBinding.statusMouthIcon.visibility = visibility
+            viewBinding.ScoreEye.visibility = visibility
+            viewBinding.ScoreMouth.visibility = visibility
+            viewBinding.ElapsedTime.visibility = visibility
+        }
+        bitmapViewModel.getIsdebugEnabled().observe(this,debugModeObserver)
+
 
 
         val alertViewModel : AlertViewModel = ViewModelProvider(this).get(AlertViewModel::class.java)
@@ -134,7 +152,7 @@ class MainActivity : AppCompatActivity() {
                 viewBinding.eyeDangerContainer.visibility = View.VISIBLE
                 periodicHandler.postDelayed({
                     eyeAlertHiderRunnable.run()
-                },10000)
+                },7000)
             }
         }
         alertViewModel.getPerclosAlert().observe(this,perclosVisualAlert)
@@ -145,15 +163,13 @@ class MainActivity : AppCompatActivity() {
                 viewBinding.yawnDangerContainer.visibility = View.INVISIBLE
             }
         }
-        val transition = viewBinding.yawnDangerContainer.background as TransitionDrawable
 
         val fomVisualAlert = Observer<Boolean> {
             if (it) {
-                transition.startTransition(5*1000)
                 viewBinding.yawnDangerContainer.visibility = View.VISIBLE
                 periodicHandler.postDelayed({
                     yawnAlertHiderRunnable.run()
-                },10000)
+                },7000)
             }
         }
         alertViewModel.getFomAlert().observe(this,fomVisualAlert)
@@ -172,6 +188,7 @@ class MainActivity : AppCompatActivity() {
 
         val alertObserver = Observer<Boolean> {
             if (it) {
+                Log.d(TAG,choosedAudioIdIndex.toString())
                 mediaPlayers[choosedAudioIdIndex].start()
                 choosedAudioIdIndex = (choosedAudioIdIndex+1) % 4
             }

@@ -14,7 +14,7 @@ class BitmapViewModel:ViewModel() {
     private var eyeStatusScore : MutableLiveData<Float> = MutableLiveData<Float>()
     private var mouthStatusLabel : MutableLiveData<String> = MutableLiveData<String>()
     private var mouthStatusScore : MutableLiveData<Float> = MutableLiveData<Float>()
-    private var isbitmapCreated : MutableLiveData<Boolean> = MutableLiveData<Boolean>(false)
+    private var isdebugEnabled: MutableLiveData<Boolean> = MutableLiveData<Boolean>(false)
     private var elapsedTime : MutableLiveData<Long> = MutableLiveData<Long>()
 
     public fun getEyeBitmap(): LiveData<Bitmap> {
@@ -53,12 +53,12 @@ class BitmapViewModel:ViewModel() {
     }
 
 
-    fun getIsBitmapCreated(): LiveData<Boolean> {
-        return isbitmapCreated
+    fun getIsdebugEnabled(): LiveData<Boolean> {
+        return isdebugEnabled
     }
 
-    fun changeIsBitmapCreated() {
-        isbitmapCreated.value = isbitmapCreated.value != true
+    fun changeIsdebugEnabled() {
+        isdebugEnabled.value = isdebugEnabled.value!!.not()
     }
 
     fun getElapsed():LiveData<Long> {
