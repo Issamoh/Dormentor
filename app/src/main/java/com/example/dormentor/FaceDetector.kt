@@ -11,6 +11,7 @@ import androidx.camera.core.ImageProxy
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
+import com.example.dormentor.measuers.FOMController
 import com.example.dormentor.measuers.PerclosController
 import com.example.dormentor.ml.*
 import com.example.dormentor.ui.BitmapViewModel
@@ -62,28 +63,40 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
                                     val wholePictureResizd1 = BitmapUtils.getResizedBitmap(copyeyeBitmap,256,256)
                                     wholePictureResizd1?.let { it1 -> bitmapViewModel.changeEyeBitmap(it1) }
                                 }
-                                val eyeBitmapBig =
-                                    BitmapUtils.getResizedBitmap(eyeBitmap, 55, 55)
-                                eyeBitmapBig?.let {
-//                                        it1 -> bitmapViewModel.changeEyeBitmap(it1)
+                                eyeBitmap?.let {
+                                    val eyeBitmapBig =
+                                        BitmapUtils.getResizedBitmap(eyeBitmap, 55, 55)
+
+                                    val tfEyeImageA = TensorImage.fromBitmap(eyeBitmapBig)
+                                    val tfEyeImage =
+                                        TensorImage.createFrom(tfEyeImageA, DataType.FLOAT32)
+                                    var outputs =
+                                        mobileNetV3EyesV4.process(tfEyeImage).probabilityAsCategoryList
+                                            .apply {
+                                                sortByDescending { it.score } // Sort with highest confidence first
+                                            }
+
+                                    outputs.forEach {
+                                        Log.d(TAG, "Eye is: " + it.label + " " + it.score)
+                                    }
+                                    Log.d(
+                                        TAG,
+                                        "Eye status : " + outputs[0].label + " * " + outputs[0].score
+                                    )
+
+                                    val current = LocalDateTime.now()
+                                    PerclosController.storage.add(
+                                        arrayOf(
+                                            outputs[0].label,
+                                            outputs[0].score,
+                                            current
+                                        )
+                                    )
+                                    bitmapViewModel.changeEyeStatusLabelScore(
+                                        outputs[0].label,
+                                        outputs[0].score
+                                    )
                                 }
-                                val tfEyeImageA = TensorImage.fromBitmap(eyeBitmapBig)
-                                val tfEyeImage = TensorImage.createFrom(tfEyeImageA, DataType.FLOAT32)
-                                var outputs =
-                                    mobileNetV3EyesV4.process(tfEyeImage).probabilityAsCategoryList
-                                             .apply {
-                                                     sortByDescending { it.score } // Sort with highest confidence first
-                                                 }
-
-                                outputs.forEach {
-                                    Log.d(TAG, "Eye is: "+it.label + " " + it.score)
-                                }
-                                Log.d(TAG, "Eye status : " + outputs[0].label + " * " + outputs[0].score)
-
-                                val current = LocalDateTime.now()
-                                PerclosController.storage.add(arrayOf(outputs[0].label,outputs[0].score,current))
-                                bitmapViewModel.changeEyeStatusLabelScore(outputs[0].label, outputs[0].score)
-
 
                                 val mouthBitmap = extractMouthRegion(face, it, 20)
                                 mouthBitmap?.let { bs ->
@@ -105,7 +118,16 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
                                         }
                                     val end = System.currentTimeMillis()
                                     bitmapViewModel.changeElapsed(end-begin)
+
                                     Log.d(TAG, "Mouth status : " + outputs2[0].label + " * " + outputs2[0].score)
+                                    val current = LocalDateTime.now()
+                                    FOMController.storage.add(
+                                        arrayOf(
+                                            outputs2[0].label,
+                                            outputs2[0].score,
+                                            current
+                                        )
+                                    )
                                     bitmapViewModel.changeMouthStatusLabelScore(outputs2[0].label, outputs2[0].score)
                                 }
                                 bitmapViewModel.changeIsBitmapCreated()

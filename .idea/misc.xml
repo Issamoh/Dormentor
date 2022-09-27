@@ -3,6 +3,9 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/ESI/3CSIL/PFE/Programming/Android/Dormentor/app/src/main/res/drawable/alert.xml" value="0.1225" />
+        <entry key="..\:/ESI/3CSIL/PFE/Programming/Android/Dormentor/app/src/main/res/drawable/alerteye.xml" value="0.1225" />
+        <entry key="..\:/ESI/3CSIL/PFE/Programming/Android/Dormentor/app/src/main/res/drawable/alertyawn.xml" value="0.133" />
         <entry key="..\:/ESI/3CSIL/PFE/Programming/Android/Dormentor/app/src/main/res/drawable/bgcomponent.xml" value="0.1" />
         <entry key="..\:/ESI/3CSIL/PFE/Programming/Android/Dormentor/app/src/main/res/drawable/bgiconstate.xml" value="0.196" />
         <entry key="..\:/ESI/3CSIL/PFE/Programming/Android/Dormentor/app/src/main/res/drawable/borderimage.xml" value="0.136" />

@@ -3,12 +3,15 @@ package com.example.dormentor
 import android.Manifest
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.graphics.Bitmap
+import android.graphics.drawable.TransitionDrawable
 import android.media.MediaPlayer
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.View
+import android.view.ViewAnimationUtils
 import android.widget.Toast
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -21,6 +24,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.dormentor.alerts.AlertViewModel
 import com.example.dormentor.alerts.AlertsController
 import com.example.dormentor.databinding.ActivityMainBinding
+import com.example.dormentor.measuers.FOMController
 import com.example.dormentor.measuers.PerclosController
 import com.example.dormentor.ui.BitmapViewModel
 import java.util.concurrent.ExecutorService
@@ -60,7 +64,6 @@ class MainActivity : AppCompatActivity() {
             } else {
                 viewBinding.statusEyeIcon.setImageResource(R.mipmap.ic_open_eye_foreground)
             }
-            viewBinding.LabelEye.setText(it)
         }
         bitmapViewModel.getEyeStatusLabel().observe(this,eyeStatLabelObserver)
 
@@ -80,7 +83,6 @@ class MainActivity : AppCompatActivity() {
             } else {
                 viewBinding.statusMouthIcon.setImageResource(R.mipmap.ic_yawn_foreground)
             }
-            viewBinding.LabelMouth.setText(it)
         }
         bitmapViewModel.getmouthStatusLabel().observe(this,mouthStatLabelObserver)
 
@@ -91,27 +93,6 @@ class MainActivity : AppCompatActivity() {
         bitmapViewModel.getmouthStatusScore().observe(this,mouthStatScoreObserver)
 
 
-        val fomObserver = Observer<Array<Int>> {
-            val closedFrames = it[0]
-            var total = it[1]
-            total = if (total == 0) 1 else total
-            var perc = df.format(closedFrames.toFloat()/total.toFloat()*100.0)
-            Log.d(TAG,perc.toString())
-            viewBinding.fom.setText("FOM = "+closedFrames.toString()+"/"+total.toString()+" = "+perc.toString()+"%")
-        }
-
-        bitmapViewModel.getFom().observe(this,fomObserver)
-
-        val perclosObserver = Observer<Array<Int>> {
-            val closedFrames = it[0]
-            var total = it[1]
-            total = if (total == 0) 1 else total
-            var perc = df.format(closedFrames.toFloat()/total.toFloat()*100.0)
-            Log.d(TAG,perc.toString())
-            viewBinding.perclos.setText("PERCLOS = "+closedFrames.toString()+"/"+total.toString()+" = "+perc.toString()+"%")
-        }
-
-        bitmapViewModel.getPerclos().observe(this,perclosObserver)
 
         val elapsedTimeObserver = Observer<Long> {
             viewBinding.ElapsedTime.setText(it.toString()+" ms")
@@ -121,6 +102,64 @@ class MainActivity : AppCompatActivity() {
 
         val alertViewModel : AlertViewModel = ViewModelProvider(this).get(AlertViewModel::class.java)
         AlertsController.alertViewModel = alertViewModel
+
+
+
+
+
+
+//      PERIODIC CALL TO UPDATE MEASURES
+        val periodicHandler = Handler(Looper.getMainLooper())
+
+        val periodicRunnable = object : Runnable {
+            override fun run(){
+                PerclosController.updatePerclos()
+                FOMController.updateFOM()
+                periodicHandler.postDelayed(this,10*1000)
+            }
+        }
+        periodicHandler.postDelayed({
+            periodicRunnable.run()
+            },5000)
+
+
+        //      Eye visual alert************************************************
+        val eyeAlertHiderRunnable = object : Runnable {
+            override fun run() {
+                viewBinding.eyeDangerContainer.visibility = View.INVISIBLE
+            }
+        }
+        val perclosVisualAlert = Observer<Boolean> {
+            if (it) {
+                viewBinding.eyeDangerContainer.visibility = View.VISIBLE
+                periodicHandler.postDelayed({
+                    eyeAlertHiderRunnable.run()
+                },10000)
+            }
+        }
+        alertViewModel.getPerclosAlert().observe(this,perclosVisualAlert)
+
+        //      YAWN visual alert************************************************
+        val yawnAlertHiderRunnable = object : Runnable {
+            override fun run() {
+                viewBinding.yawnDangerContainer.visibility = View.INVISIBLE
+            }
+        }
+        val transition = viewBinding.yawnDangerContainer.background as TransitionDrawable
+
+        val fomVisualAlert = Observer<Boolean> {
+            if (it) {
+                transition.startTransition(5*1000)
+                viewBinding.yawnDangerContainer.visibility = View.VISIBLE
+                periodicHandler.postDelayed({
+                    yawnAlertHiderRunnable.run()
+                },10000)
+            }
+        }
+        alertViewModel.getFomAlert().observe(this,fomVisualAlert)
+
+
+        //      AUDIO ALERT***************************************************
 
 //        we prepare id for each audio resource because doing it dynamically is slow
         val alarmIds = arrayListOf(R.raw.alarm1,R.raw.alarm2,R.raw.alarm3,R.raw.alarm4)
@@ -134,23 +173,12 @@ class MainActivity : AppCompatActivity() {
         val alertObserver = Observer<Boolean> {
             if (it) {
                 mediaPlayers[choosedAudioIdIndex].start()
-                choosedAudioIdIndex = (choosedAudioIdIndex+1) % 3
+                choosedAudioIdIndex = (choosedAudioIdIndex+1) % 4
             }
         }
         alertViewModel.getisAlert().observe(this,alertObserver)
 
-        val perclosHandler = Handler(Looper.getMainLooper())
-
-        val perclosRunnable = object : Runnable {
-            override fun run(){
-                PerclosController.updatePerclos()
-                perclosHandler.postDelayed(this,10*1000)
-            }
-        }
-        perclosHandler.postDelayed({
-                perclosRunnable.run()
-            },5000)
-
+//        CAMERA MANAGEMENT
             //check if we already have the permissions needed, otherwise request them
             if(allPermissionsGranted()) {
                 startCamera()

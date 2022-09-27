@@ -21,6 +21,9 @@ object AlertsController {
     }
 
     fun lanerAlertePerclos() {
+        //        visual alert
+        alertViewModel.setPerclosAlert()
+
         if (!alertAudioEnCours) {
             alertAudioEnCours = true
             alertViewModel.launchAlert()
@@ -31,6 +34,20 @@ object AlertsController {
         }
     }
 
+    fun lanerAlerteFOM() {
+//        visual alert
+        alertViewModel.setFomAlert()
+
+//        audio alert
+        if (!alertAudioEnCours) {
+            alertAudioEnCours = true
+            alertViewModel.launchAlert()
+            audioAlertsHandler.postDelayed({
+                audioAlertsRunnable.run()
+            },dureeAlert)
+
+        }
+    }
 
 
 }

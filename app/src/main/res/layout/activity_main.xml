@@ -14,63 +14,32 @@
       tools:layout_editor_absoluteX="34dp"
       tools:layout_editor_absoluteY="-87dp"></androidx.camera.view.PreviewView>
 
-
-
-  <EditText
-      android:id="@+id/LabelEye"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_margin="20dp"
-      android:background="@drawable/bgcomponent"
-      android:padding="7dp"
-      android:textColor="@color/black"
-      android:textSize="20dp"
+  <ImageView
+      android:id="@+id/eyeDangerContainer"
+      android:layout_width="150dp"
+      android:layout_height="150dp"
+      android:layout_margin="30dp"
+      android:background="@drawable/alerteye"
+      android:padding="10dp"
+      android:visibility="invisible"
       app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toTopOf="@+id/previewView"
-      android:visibility="invisible"/>
+      app:layout_constraintTop_toTopOf="@+id/previewView" />
 
-
-
-  <EditText
-      android:id="@+id/LabelMouth"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_margin="20dp"
-      android:background="@drawable/bgcomponent"
-      android:padding="7dp"
-      android:textColor="@color/black"
-      android:textSize="20dp"
+  <ImageView
+      android:id="@+id/yawnDangerContainer"
+      android:layout_width="150dp"
+      android:layout_height="150dp"
+      android:layout_margin="30dp"
+      android:background="@drawable/alertyawn"
+      android:padding="10dp"
+      android:visibility="invisible"
       app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toBottomOf="@+id/LabelEye"
-      android:visibility="invisible"/>
+      app:layout_constraintTop_toBottomOf="@+id/eyeDangerContainer" />
 
-  <TextView
-      android:id="@+id/perclos"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_margin="20dp"
-      android:background="@drawable/bgcomponent"
-      android:padding="7dp"
-      android:text=""
-      android:textColor="@color/black"
-      android:textSize="20dp"
-      app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toBottomOf="@+id/LabelMouth"
-      />
 
-  <TextView
-      android:id="@+id/fom"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_margin="20dp"
-      android:background="@drawable/bgcomponent"
-      android:padding="7dp"
-      android:text=""
-      android:textColor="@color/black"
-      android:textSize="20dp"
-      app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toBottomOf="@+id/perclos"
-      />
+
+
+
 
   <EditText
       android:id="@+id/ElapsedTime"
@@ -113,7 +82,7 @@
         android:id="@+id/ScoreEye"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="30dp"
+        android:layout_marginStart="10dp"
         android:background="@drawable/bgcomponent"
         android:padding="7dp"
         android:textColor="#1C3879"
@@ -149,7 +118,7 @@
         android:id="@+id/ScoreMouth"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="30dp"
+        android:layout_marginStart="10dp"
         android:background="@drawable/bgcomponent"
         android:padding="7dp"
         android:textColor="#1C3879"
