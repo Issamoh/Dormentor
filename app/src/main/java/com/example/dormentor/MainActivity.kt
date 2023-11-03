@@ -1,6 +1,7 @@
 package com.example.dormentor
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.graphics.Bitmap
 import android.media.MediaPlayer
@@ -99,6 +100,7 @@ class MainActivity : AppCompatActivity() {
             bitmapViewModel.changeIsdebugEnabled()
         }
 
+        //        ALL DEBUG
         val debugModeObserver = Observer<Boolean> {
             var visibility:Int
             if (it) {
@@ -117,6 +119,8 @@ class MainActivity : AppCompatActivity() {
         bitmapViewModel.getIsdebugEnabled().observe(this,debugModeObserver)
 
 
+
+        //////
 
         val alertViewModel : AlertViewModel = ViewModelProvider(this).get(AlertViewModel::class.java)
         AlertsController.alertViewModel = alertViewModel
@@ -149,10 +153,12 @@ class MainActivity : AppCompatActivity() {
         }
         val perclosVisualAlert = Observer<Boolean> {
             if (it) {
-                viewBinding.eyeDangerContainer.visibility = View.VISIBLE
-                periodicHandler.postDelayed({
-                    eyeAlertHiderRunnable.run()
-                },7000)
+
+                    viewBinding.eyeDangerContainer.visibility = View.VISIBLE
+                    periodicHandler.postDelayed({
+                        eyeAlertHiderRunnable.run()
+                    }, 7000)
+
             }
         }
         alertViewModel.getPerclosAlert().observe(this,perclosVisualAlert)
@@ -170,6 +176,7 @@ class MainActivity : AppCompatActivity() {
                 periodicHandler.postDelayed({
                     yawnAlertHiderRunnable.run()
                 },7000)
+
             }
         }
         alertViewModel.getFomAlert().observe(this,fomVisualAlert)
@@ -190,8 +197,8 @@ class MainActivity : AppCompatActivity() {
             if (it) {
                 Log.d(TAG,choosedAudioIdIndex.toString())
                 mediaPlayers[choosedAudioIdIndex].start()
-                choosedAudioIdIndex = (choosedAudioIdIndex+1) % 4
-            }
+                choosedAudioIdIndex = (choosedAudioIdIndex+1) % 4}
+
         }
         alertViewModel.getisAlert().observe(this,alertObserver)
 
@@ -237,6 +244,7 @@ class MainActivity : AppCompatActivity() {
             it) == PERMISSION_GRANTED
     }
 
+    @SuppressLint("SuspiciousIndentation")
     private fun startCamera() {
         //ProcessCameraProvider is a singleton used to bind Cameras lifeCycle to any lifeCycleOwner (this activity for this case)
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
@@ -258,7 +266,7 @@ class MainActivity : AppCompatActivity() {
                     val imageAnalysisUseCase = ImageAnalysis.Builder()
                         .build()
                         .also {
-                            it.setAnalyzer(cameraExecutor, FaceDetector(this))
+                            it.setAnalyzer(cameraExecutor, FaceDetector(this, viewBinding.graphicOverlayFinder))
                         }
 
                     try {

@@ -23,11 +23,15 @@ import com.google.mlkit.vision.face.FaceDetectorOptions
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.support.image.TensorImage
 import util.BitmapUtils
+import util.FaceContourGraphic
+import util.GraphicOverlay
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 import java.time.LocalDateTime
-class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.Analyzer {
+class FaceDetector(private val lifecycleOwner: LifecycleOwner, private val customView: GraphicOverlay) : ImageAnalysis.Analyzer {
+
+    val graphicOverlay: GraphicOverlay = customView
 
     val bitmapViewModel : BitmapViewModel = ViewModelProvider(lifecycleOwner as ViewModelStoreOwner).get(BitmapViewModel::class.java)
     private val mobileNetV3MouthCrop55V4 = MobileNetV3MouthCrop55V4.newInstance(lifecycleOwner as Context)
@@ -40,6 +44,9 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
         //Creating Bitmap image based on ImageProxy to be used after for display
         val bitmap : Bitmap? = BitmapUtils.getBitmap(image)
 
+        //Clearing the graphicOverlay
+        graphicOverlay.clear()
+
         //Creating InputImage object used as input for the faceDetector
 
         val img = image.image
@@ -49,6 +56,9 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
             detector.process(inputImage)
                 .addOnSuccessListener { faces ->
                         for (face in faces) {
+                            val faceGraphic = FaceContourGraphic(graphicOverlay, face, img.cropRect)
+                            graphicOverlay.add(faceGraphic)
+                            graphicOverlay.postInvalidate() //it should be called after creating all faceGraphic object but we know that in our case there will be just one face
                         bitmap?.let {
                             var isDebugEnabled = bitmapViewModel.getIsdebugEnabled().value
 
@@ -88,7 +98,7 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
                                             current
                                         )
                                     )
-                                    if (isDebugEnabled!!){
+                                    if (isDebugEnabled!! ){
                                     bitmapViewModel.changeEyeStatusLabelScore(
                                         outputs[0].label,
                                         outputs[0].score
@@ -99,7 +109,7 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
 //                            MOUTH CLASSIFICATION :
 
                                 val mouthBitmap = extractMouthRegion(face, it, 20)
-                            if (isDebugEnabled!!) {
+                            if (isDebugEnabled!! ) {
                                 mouthBitmap?.let { bs ->
                                     val copymouthBitmap = bs.copy(bs.config, true)
                                     val wholePictureResizd =
@@ -114,9 +124,7 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner) : ImageAnalysis.A
                                 mouthBitmap?.let { bimp ->
                                     val mouthBitmapBig =
                                         BitmapUtils.getResizedBitmap(bimp, 55, 55)
-                                    mouthBitmapBig?.let {
-//                                            it2 -> bitmapViewModel.changeMouthBitmap(it2)
-                                    }
+
                                     val tfMouthImageA = TensorImage.fromBitmap(mouthBitmapBig)
                                     val tfMouthImage = TensorImage.createFrom(tfMouthImageA, DataType.FLOAT32)
                                     var outputs2 = mobileNetV3MouthCrop55V4.process(tfMouthImage).probabilityAsCategoryList

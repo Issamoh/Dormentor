@@ -68,4 +68,5 @@ class BitmapViewModel:ViewModel() {
         elapsedTime.value = newValue
     }
 
+
 }

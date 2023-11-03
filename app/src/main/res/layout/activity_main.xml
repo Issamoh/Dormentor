@@ -6,13 +6,29 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-
-  <androidx.camera.view.PreviewView
-      android:id="@+id/previewView"
+  <FrameLayout
+      android:id="@+id/framelayout"
       android:layout_width="match_parent"
-      android:layout_height="match_parent"
-      tools:layout_editor_absoluteX="34dp"
-      tools:layout_editor_absoluteY="-87dp"></androidx.camera.view.PreviewView>
+      android:layout_height="0dp"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="parent">
+
+    <androidx.camera.view.PreviewView
+        android:id="@+id/previewView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    </androidx.camera.view.PreviewView>
+
+    <util.GraphicOverlay
+        android:id="@+id/graphicOverlay_finder"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+  </FrameLayout>
+
 
   <ImageView
       android:id="@+id/eyeDangerContainer"
@@ -23,7 +39,7 @@
       android:padding="10dp"
       android:visibility="invisible"
       app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toTopOf="@+id/previewView" />
+      app:layout_constraintTop_toTopOf="@+id/framelayout" />
 
   <ImageView
       android:id="@+id/yawnDangerContainer"
@@ -52,7 +68,7 @@
       android:textSize="20dp"
       android:visibility="invisible"
       app:layout_constraintEnd_toEndOf="parent"
-      app:layout_constraintTop_toTopOf="@+id/previewView" />
+      app:layout_constraintTop_toTopOf="@+id/framelayout" />
 
 
   <LinearLayout
@@ -99,7 +115,7 @@
       android:id="@+id/linearMouth"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      app:layout_constraintBottom_toBottomOf="@+id/previewView"
+      app:layout_constraintBottom_toBottomOf="@+id/framelayout"
       android:layout_marginBottom="80dp"
       android:gravity="center_vertical">
     <ImageView
@@ -134,6 +150,7 @@
   </LinearLayout>
 
 
+
   <com.google.android.material.switchmaterial.SwitchMaterial
       android:id="@+id/debugButton"
       android:layout_width="wrap_content"
@@ -144,8 +161,6 @@
       app:layout_constraintBottom_toBottomOf="parent"
       app:layout_constraintEnd_toEndOf="parent"
     />
-
-
 
 
 
