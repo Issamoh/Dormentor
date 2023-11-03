@@ -31,7 +31,7 @@ import kotlin.math.min
 import java.time.LocalDateTime
 class FaceDetector(private val lifecycleOwner: LifecycleOwner, private val customView: GraphicOverlay) : ImageAnalysis.Analyzer {
 
-    val graphicOverlay: GraphicOverlay = customView
+    var activeGraphicOverlay: GraphicOverlay = customView
 
     val bitmapViewModel : BitmapViewModel = ViewModelProvider(lifecycleOwner as ViewModelStoreOwner).get(BitmapViewModel::class.java)
     private val mobileNetV3MouthCrop55V4 = MobileNetV3MouthCrop55V4.newInstance(lifecycleOwner as Context)
@@ -44,8 +44,6 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner, private val custo
         //Creating Bitmap image based on ImageProxy to be used after for display
         val bitmap : Bitmap? = BitmapUtils.getBitmap(image)
 
-        //Clearing the graphicOverlay
-        graphicOverlay.clear()
 
         //Creating InputImage object used as input for the faceDetector
 
@@ -56,9 +54,17 @@ class FaceDetector(private val lifecycleOwner: LifecycleOwner, private val custo
             detector.process(inputImage)
                 .addOnSuccessListener { faces ->
                         for (face in faces) {
-                            val faceGraphic = FaceContourGraphic(graphicOverlay, face, img.cropRect)
-                            graphicOverlay.add(faceGraphic)
-                            graphicOverlay.postInvalidate() //it should be called after creating all faceGraphic object but we know that in our case there will be just one face
+                            var isDebugEnabled = bitmapViewModel.getIsdebugEnabled().value
+                            if (isDebugEnabled!!) {
+                                //Clearing the graphicOverlay
+                                activeGraphicOverlay.clear()
+                                val faceGraphic =
+                                    FaceContourGraphic(activeGraphicOverlay, face, img.cropRect)
+                                activeGraphicOverlay.add(faceGraphic)
+                                activeGraphicOverlay.postInvalidate() //it should be called after creating all faceGraphic object but we know that in our case there will be just one face
+                            } else {
+                                activeGraphicOverlay.clear()
+                            }
                         bitmap?.let {
                             var isDebugEnabled = bitmapViewModel.getIsdebugEnabled().value
 
